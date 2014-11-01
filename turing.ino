@@ -7,7 +7,7 @@
  *
  * TO-DO LIST:
  * - Verificar os pinos do Arduino
- * - Acender todos os leds para testar
+ * 
  *
  *
  * Outubro/2014
@@ -15,10 +15,10 @@
 
 
 short pins[38] = {//pinos do arduino
--1,
-22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, //pinos da fita
-34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, //pinos dos estados
-45, 46, 47, 48, 49, 50, 51, 52, 53, 7, 8, 9 //pinos da cabeça
+  -1,
+  22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, //pinos da fita
+  34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, //pinos dos estados
+  45, 46, 47, 48, 49, 50, 51, 52, 53, 7, 8, 9 //pinos da cabeça
 };
 
 short fita[12] = {// define a fita e atribui o pino
@@ -67,18 +67,18 @@ short cabeca[12] = {
   pins[35] //11
 };
 
-short auxFita[13]; //variavel aux de fita
+short auxFita[14]; //variavel aux de fita
 short auxEstados[13]; //variavel aux de estados
 short auxCabeca[13]; //variavel aux de Cabeça
-short x=1;
+short posicao=1;
+short estado=15;
 
 //define as portas dos botões
-short comeca=A0;
+short comeca=11;
 short reinicia=A1;
 short direita=A2;
 short esquerda=A3;
 short muda=A4;
-short estado=A5;
 
 void setup() {
   iniciaPinos(); //Coloca os pinos como OUTPUT
@@ -86,7 +86,7 @@ void setup() {
   inicializaLeds(); //Inicializa variavel Leds
   apagaLeds(); //Apaga todos os leds
 
-  // Inicializa os pinos dos botões
+    // Inicializa os pinos dos botões
   pinMode(comeca, INPUT);
   pinMode(reinicia, INPUT);
   pinMode(direita, INPUT);
@@ -103,7 +103,7 @@ void loop() {
 }
 
 void testeInicial(){ // ascende todos os leds da placa
-  for (byte x=1; x<=12; x++) {
+  for (byte x=1; x<12; x++) {
     auxFita[x] = 1;
   }
   for (byte x=0; x<=13; x++) {
@@ -116,7 +116,7 @@ void testeInicial(){ // ascende todos os leds da placa
 }
 
 void iniciaPinos() { //Coloca todos os pinos como OUTPUT
-  for (short i = 1; i <= 38; i++) {
+  for (short i = 0; i <= 38; i++) {
     pinMode(pins[i], OUTPUT);
   }
 }
@@ -124,7 +124,7 @@ void iniciaPinos() { //Coloca todos os pinos como OUTPUT
 void inicializaLeds() { //inicializa a variavel com zero
   auxFita[0]=5;
   auxFita[13]=8;
-  for (byte x=1; x<=12; x++) {
+  for (byte x=1; x<12; x++) {
     auxFita[x] = 0;
   }
   for (byte x=0; x<=13; x++) {
@@ -150,23 +150,23 @@ void verificaBotao() {
     executaReinicia();
   }
   if (digitalRead(direita) == HIGH){
-    if (x>12){
-      x++;
+    if (posicao>12){
+      posicao++;
       estado = 16;
     }
   }	
   if (digitalRead(esquerda) == HIGH){
-    if (x<0){
-      x--;
+    if (posicao<0){
+      posicao--;
       estado = 16;
     }
   }	
   if (digitalRead(muda) == HIGH){
     estado = 16;
-    if (auxFita[x]=1)
-      auxFita[x]=0;
+    if (auxFita[posicao]=1)
+      auxFita[posicao]=0;
     else
-      auxFita[x]=1;		
+      auxFita[posicao]=1;		
   }	
 }
 
@@ -178,7 +178,7 @@ void executaReinicia(){
 void estadoInicial(){
   if (estado == 15) {
     auxFita[0] = 5;
-    auxFita[1] = 0;
+    auxFita[1] = 0; //1º led
     auxFita[2] = 1;
     auxFita[3] = 1;
     auxFita[4] = 0;
@@ -188,7 +188,9 @@ void estadoInicial(){
     auxFita[8] = 0;
     auxFita[9] = 0;
     auxFita[10] = 1;
-    auxFita[11] = 8;
+    auxFita[11] = 1;
+    auxFita[12] = 1; //último led
+    auxFita[13] = 8;
   }
 }
 
@@ -196,10 +198,10 @@ void estadoInicial(){
 void ligaLeds() {
   for (byte x=1; x<=12; x++) {
     if (auxFita[x] == 1) {
-      digitalWrite(fita[x], HIGH);
+      digitalWrite(fita[x-1], HIGH);
       delayMicroseconds(100);
-      digitalWrite(fita[x], LOW);
-  }
+      digitalWrite(fita[x-1], LOW);
+    }
   }
   for (byte x=0; x<=13; x++) {
     if (auxEstados[x] == 1) {
@@ -223,188 +225,198 @@ void ligaLeds() {
 //AQUI COMEÇA A LOGICA DA MAQUINA DE TURING
 
 void organizaFita() {
-  delay(500); //espera 1/2 segundo
-  if (estado == 0) {
+  switch (estado) {
+  case 0:
     auxEstados[0] = 1; //liga o led do estado atual
-    if (auxFita[x] == 1) {
-      x++;
+    if (auxFita[posicao] == 1) {
+      posicao++;
       estado = 0;
+      break;
     }
-    if (auxFita[x] == 0) {
-      x++;
+    if (auxFita[posicao] == 0) {
+      posicao++;
       auxEstados[0] = 0; //desliga o led do estado atual quando muda de estado
       estado = 1;
+      break;
     }
-  }
-
-  if (estado == 1) {
+    break;
+  case 1:
     auxEstados[1] = 1;//liga o led do estado atual
-    if (auxFita[x] == 1) {
-      auxFita[x] = 0;
-      x--;
+    if (auxFita[posicao] == 1) {
+      auxFita[posicao] = 0;
+      posicao--;
       auxEstados[1] = 0;
       estado = 2;
+      break;
     }
-    if (auxFita[x] == 0) {
-      x++;
+    if (auxFita[posicao] == 0) {
+      posicao++;
       estado = 1;
+      break;
     }
-    if (auxFita[x] == 8) {
-      x--;
+    if (auxFita[posicao] == 8) {
+      posicao--;
       auxEstados[1] = 0;
       estado = 4;
     }
-  }
-
-  if (estado == 2) {
+    break;
+  case 2:
     auxEstados[2] = 1;//liga o led do estado atual
-    if (auxFita[x] == 1) {
-      x++;
+    if (auxFita[posicao] == 1) {
+      posicao++;
       auxEstados[2] = 0;
       estado = 3;
+      break;
     }
-    if (auxFita[x] == 0) {
-      x--;
+    if (auxFita[posicao] == 0) {
+      posicao--;
       estado = 2;
+      break;
     }
-    if (auxFita[x] == 5) {
-      x++;
+    if (auxFita[posicao] == 5) {
+      posicao++;
       auxEstados[2] = 0;
       estado = 5;
     }
-  }
-
-  if (estado == 3) {
+    break;
+  case 3:
     auxEstados[3] = 1;//liga o led do estado atual
-    if (auxFita[x] == 1) {
+    if (auxFita[posicao] == 1) {
       terminaFita();
+      break;
     }
-    if (auxFita[x] == 0) {
-      x++;
+    if (auxFita[posicao] == 0) {
+      posicao++;
       auxEstados[3] = 0;
       estado = 2;
     }
-  }
-
-  if (estado == 4) {
+    break;
+  case 4:
     auxEstados[4] = 1;//liga o led do estado atual
-    if (auxFita[x] == 1) {
-      x--;
+    if (auxFita[posicao] == 1) {
+      posicao--;
       estado = 4;
+      break;
     }
-    if (auxFita[x] == 0) {
-      x--;
+    if (auxFita[posicao] == 0) {
+      posicao--;
       estado = 4;
+      break;
     }
-    if (auxFita[x] == 5) {
-      x++;
+    if (auxFita[posicao] == 5) {
+      posicao++;
       auxEstados[4] = 0;
       estado = 6;
     }
-  }
-
-  if (estado == 5) {
+    break;
+  case 5:
     auxEstados[5] = 1;    //liga o led do estado atual
-    if (auxFita[x] == 1) {
+    if (auxFita[posicao] == 1) {
       terminaFita();
+      break;
     }
-    if (auxFita[x] == 0) {
-      auxFita[x] = 1;
-      x++;
+    if (auxFita[posicao] == 0) {
+      auxFita[posicao] = 1;
+      posicao++;
       auxEstados[5] = 0;      
       estado = 0;
+      break;
     }
-  }
-
-  if (estado == 6) {
+    break;
+  case 6:
     auxEstados[6] = 1;    //liga o led do estado atual
-    if (auxFita[x] == 1) {
-      x++;
+    if (auxFita[posicao] == 1) {
+      posicao++;
       auxEstados[6] = 0;      
       estado = 7;
+      break;
     }
-    if (auxFita[x] == 0) {
+    if (auxFita[posicao] == 0) {
       terminaFita();
+      break;
     }		
-  }
-
-  if (estado == 7) {
+    break;
+  case 7:
     auxEstados[7] = 1;//liga o led do estado atual
-    if (auxFita[x] == 1) {
-      x++;
+    if (auxFita[posicao] == 1) {
+      posicao++;
       auxEstados[7] = 0;    
       estado = 8;
+      break;
     }
-    if (auxFita[x] == 0) {
-      x++;
+    if (auxFita[posicao] == 0) {
+      posicao++;
       auxEstados[7] = 0;
       estado = 12;
     }
-  }
-
-  if (estado == 8) {
+    break;
+  case 8:
     auxEstados[8] = 1;//liga o led do estado atual
-    if (auxFita[x] == 1) {
-      x++;
+    if (auxFita[posicao] == 1) {
+      posicao++;
       auxEstados[8] = 0;
       estado = 9;
+      break;
     }
-    if (auxFita[x] == 0) {
-      x++;
+    if (auxFita[posicao] == 0) {
+      posicao++;
       auxEstados[8] = 0;
       estado = 12;
     }
-  }
-
-  if (estado == 9) {
+    break;
+  case 9:
     auxEstados[9] = 1;//liga o led do estado atual
-    if (auxFita[x] == 1) {
-      auxFita[x] = 0;
-      x++;
+    if (auxFita[posicao] == 1) {
+      auxFita[posicao] = 0;
+      posicao++;
       auxEstados[9] = 0;
       estado = 10;
+      break;
     }
-    if (auxFita[x] == 0) {
-      x++;
+    if (auxFita[posicao] == 0) {
+      posicao++;
       auxEstados[9] = 0;
       estado = 12;
     }
-  }
-
-  if (estado == 10) {
+    break;
+  case 10:
     auxEstados[10] = 1;//liga o led do estado atual
-    if (auxFita[x] == 1) {
-      x++;
+    if (auxFita[posicao] == 1) {
+      posicao++;
       auxEstados[10] = 0;
       estado = 10;
+      break;
     }
-    if (auxFita[x] == 0) {
-      auxFita[x] = 1;
-      x--;
+    if (auxFita[posicao] == 0) {
+      auxFita[posicao] = 1;
+      posicao--;
       auxEstados[11] = 0;
       estado = 11;
     }
-  }
-
-  if (estado == 11) {
+    break;
+  case 11:
     auxEstados[11] = 1;//liga o led do estado atual
-    if (auxFita[x] == 1) {
-      x--;
+    if (auxFita[posicao] == 1) {
+      posicao--;
       estado = 11;
+      break;
     }
-    if (auxFita[x] == 0) {
-      x++;
+    if (auxFita[posicao] == 0) {
+      posicao++;
       auxEstados[11] = 0;
       estado = 6;
     }
-  }
-
-  if (estado == 12) {
+    break;
+  case 12:
     auxEstados[12] = 1;
-    ligaLeds();
+    terminaFita();
+    break;
+  default: 
+    break;
   }
-
 }
+
+
 void terminaFita() {
   while (1) {
     ligaLeds();
