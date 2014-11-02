@@ -8,10 +8,10 @@
  */
 
 
-short pins[38] = {//pinos 5do arduino
-  -1,
+short pins[38] = {//pinos do arduino
+  -1,//
   22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, //pinos da fita
-  34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, //pinos dos estados
+  34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, //pinos dos estados
   47, 48, 49, 50, 51, 52, 53, 2, 3, 4, 5, 6 //pinos da cabeça
 };
 
@@ -30,25 +30,23 @@ short fita[12] = {// define a fita e atribui o pino
   pins[12] //11
 };
 
-short estados[13] = {
+short estados[12] = {
   pins[13], //0
-  pins[12],
-  pins[13],
   pins[14],
   pins[15],
   pins[16],
   pins[17],
   pins[18],
   pins[19],
-  pins[20],  
+  pins[20],
   pins[21],
-  pins[22],
-  pins[23] //12
+  pins[22],  
+  pins[23],
+  pins[24] //11
 };
 
 short cabeca[12] = {
-  pins[24], //0
-  pins[25],
+  pins[25], //0
   pins[26],
   pins[27],
   pins[28],
@@ -56,9 +54,10 @@ short cabeca[12] = {
   pins[30],
   pins[31],
   pins[32],
-  pins[33],  
-  pins[34],
-  pins[35] //11
+  pins[33],
+  pins[34],  
+  pins[35],
+  pins[36] //11
 };
 
 short auxFita[14]; //variavel aux de fita
@@ -66,7 +65,7 @@ short auxEstados[13]; //variavel aux de estados
 short auxCabeca[13]; //variavel aux de Cabeça
 short posicao=1;
 short estado=15;
-short delaypadrao=200;
+short delaypadrao=400;
 
 //define as portas dos botões
 short comeca=5;
@@ -108,7 +107,7 @@ void testeInicial(){ // ascende todos os leds da placa
   for (byte x=1; x<12; x++) {
     auxFita[x] = 1;
   }
-  for (byte x=0; x<=13; x++) {
+  for (byte x=0; x<12; x++) {
     auxEstados[x] = 1;
   }
   for (byte x=0; x<=12; x++) {
@@ -199,12 +198,12 @@ void ligaLeds() {
       delayMicroseconds(100);
     }
   }
-  //  for (byte x=0; x<=13; x++) {
-  //    if (auxEstados[x] == 1) {
-  //      digitalWrite(estados[x], HIGH);
-  //      delayMicroseconds(100);
-  //    }
-  //  }
+  for (byte x=0; x<=12; x++) {
+    if (auxEstados[x] == 1) {
+      digitalWrite(estados[x], HIGH);
+      delayMicroseconds(100);
+    }
+  }
   //  for (byte x=0; x<=13; x++) {
   //    if (auxCabeca[x] == 1) {
   //      digitalWrite(cabeca[x], HIGH);
@@ -214,9 +213,16 @@ void ligaLeds() {
 
 }
 
+void ligaEstados(byte x){
+    for (byte x=0; x<=13; x++) {
+    auxEstados[x] = 0;
+    }
+    auxEstados[x] = 1;
+}
+
 void imprime(){
   Serial.print("Fita:");
-  for (byte x=0; x<=13; x++){
+  for (byte x=1; x<13; x++){
     Serial.print(auxFita[x]);
   }
   Serial.print("  Estado:");
@@ -233,7 +239,7 @@ void organizaFita() {
   switch (estado) {
   case 0: //q0
     imprime();
-    auxEstados[0] = 1; //liga o led do estado atual
+    ligaEstados(estado);
     if (auxFita[posicao] == 1) {
       posicao++;
       estado = 0;
@@ -241,18 +247,16 @@ void organizaFita() {
     }
     if (auxFita[posicao] == 0) {
       posicao++;
-      auxEstados[0] = 0; //desliga o led do estado atual quando muda de estado
       estado = 1;
       break;
     }
     break;
   case 1: //q1
     imprime();
-    auxEstados[1] = 1;//liga o led do estado atual
+    ligaEstados(estado);
     if (auxFita[posicao] == 1) {
       auxFita[posicao] = 0;
       posicao--;
-      auxEstados[1] = 0;
       estado = 2;
       break;
     }
@@ -263,16 +267,14 @@ void organizaFita() {
     }
     if (auxFita[posicao] == 8) {
       posicao--;
-      auxEstados[1] = 0;
       estado = 4;
     }
     break;
   case 2:
     imprime();
-    auxEstados[2] = 1;//liga o led do estado atual
+    ligaEstados(estado);
     if (auxFita[posicao] == 1) {
       posicao++;
-      auxEstados[2] = 0;
       estado = 3;
       break;
     }
@@ -283,13 +285,12 @@ void organizaFita() {
     }
     if (auxFita[posicao] == 5) {
       posicao++;
-      auxEstados[2] = 0;
       estado = 3;//sugestao Joao
     }
     break;
   case 3:
     imprime();
-    auxEstados[3] = 1;//liga o led do estado atual
+    ligaEstados(estado);
     if (auxFita[posicao] == 1) {
       terminaFita();
       break;
@@ -297,13 +298,12 @@ void organizaFita() {
     if (auxFita[posicao] == 0) {
       auxFita[posicao] = 1;
       posicao++;
-      auxEstados[3] = 0;
       estado = 0;
     }
     break;
   case 4:
     imprime();
-    auxEstados[4] = 1;//liga o led do estado atual
+    ligaEstados(estado);
     if (auxFita[posicao] == 1) {
       posicao--;
       estado = 4;
@@ -316,32 +316,15 @@ void organizaFita() {
     }
     if (auxFita[posicao] == 5) {
       posicao++;
-      auxEstados[4] = 0;
-      estado = 6;
+      estado = 5;
     }
     break;
   case 5:
     imprime();
-    auxEstados[5] = 1;    //liga o led do estado atual
+    ligaEstados(estado);
     if (auxFita[posicao] == 1) {
-      terminaFita();
-      break;
-    }
-    if (auxFita[posicao] == 0) {
-      auxFita[posicao] = 1;
-      posicao++;
-      auxEstados[5] = 0;      
-      estado = 0;
-      break;
-    }
-    break;
-  case 6:
-    imprime();
-    auxEstados[6] = 1;    //liga o led do estado atual
-    if (auxFita[posicao] == 1) {
-      posicao++;
-      auxEstados[6] = 0;      
-      estado = 7;
+      posicao++;      
+      estado = 6;
       break;
     }
     if (auxFita[posicao] == 0) {
@@ -349,85 +332,76 @@ void organizaFita() {
       break;
     }		
     break;
+  case 6:
+    imprime();
+    ligaEstados(estado);
+    if (auxFita[posicao] == 1) {
+      posicao++;    
+      estado = 7;
+      break;
+    }
+    if (auxFita[posicao] == 0) {
+      posicao++;
+      estado = 11;
+    }
+    break;
   case 7:
     imprime();
-    auxEstados[7] = 1;//liga o led do estado atual
+    ligaEstados(estado);
     if (auxFita[posicao] == 1) {
       posicao++;
-      auxEstados[7] = 0;    
       estado = 8;
       break;
     }
     if (auxFita[posicao] == 0) {
       posicao++;
-      auxEstados[7] = 0;
-      estado = 12;
+      estado = 11;
     }
     break;
   case 8:
     imprime();
-    auxEstados[8] = 1;//liga o led do estado atual
+    ligaEstados(estado);
     if (auxFita[posicao] == 1) {
+      auxFita[posicao] = 0;
       posicao++;
-      auxEstados[8] = 0;
       estado = 9;
       break;
     }
     if (auxFita[posicao] == 0) {
       posicao++;
-      auxEstados[8] = 0;
-      estado = 12;
+      estado = 11;
     }
     break;
   case 9:
     imprime();
-    auxEstados[9] = 1;//liga o led do estado atual
-    if (auxFita[posicao] == 1) {
-      auxFita[posicao] = 0;
-      posicao++;
-      auxEstados[9] = 0;
-      estado = 10;
-      break;
-    }
-    if (auxFita[posicao] == 0) {
-      posicao++;
-      auxEstados[9] = 0;
-      estado = 12;
-    }
-    break;
-  case 10:
-    imprime();
-    auxEstados[10] = 1;//liga o led do estado atual
+    ligaEstados(estado);
     if (auxFita[posicao] == 1) {
       posicao++;
-      auxEstados[10] = 0;
-      estado = 10;
+      estado = 9;
       break;
     }
     if (auxFita[posicao] == 0) {
       auxFita[posicao] = 1;
       posicao--;
-      auxEstados[11] = 0;
-      estado = 11;
+      estado = 10;
     }
     break;
-  case 11:
+  case 10:
     imprime();
-    auxEstados[11] = 1;//liga o led do estado atual
+    ligaEstados(estado);
     if (auxFita[posicao] == 1) {
       posicao--;
-      estado = 11;
+      estado = 10;
       break;
     }
     if (auxFita[posicao] == 0) {
       posicao++;
-      auxEstados[11] = 0;
-      estado = 6;
+      estado = 5;
     }
     break;
-  case 12:
+  case 11:
     imprime();
-    auxEstados[12] = 1;
+    ligaEstados(estado);
     terminaFita();
     break;
   default: 
